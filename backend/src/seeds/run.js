@@ -1,0 +1,22 @@
+require('dotenv').config();
+const { pool } = require('../config/database');
+const logger = require('../utils/logger');
+const { seedCategories } = require('./categories');
+
+async function runSeeds() {
+  try {
+    logger.info('Starting database seeding...');
+
+    await seedCategories();
+
+    logger.info('Database seeding completed successfully');
+    await pool.end();
+    process.exit(0);
+  } catch (error) {
+    logger.error('Database seeding failed:', error);
+    await pool.end();
+    process.exit(1);
+  }
+}
+
+runSeeds();
