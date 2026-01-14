@@ -51,10 +51,9 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API routes will be added here
-// app.use(`/${process.env.API_VERSION || 'v1'}/auth`, require('./routes/auth'));
-// app.use(`/${process.env.API_VERSION || 'v1'}/expenses`, require('./routes/expenses'));
-// ... more routes
+// API routes
+const routes = require('./routes');
+app.use(`/${process.env.API_VERSION || 'v1'}`, routes);
 
 // 404 handler
 app.use((req, res) => {
