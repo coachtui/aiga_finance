@@ -1,27 +1,28 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <AuthProvider>
       <Routes>
-        <Route path="/" element={
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                EquipmentAI Finance
-              </h1>
-              <p className="text-gray-600 mb-8">
-                Business Finance Tracker - Coming Soon
-              </p>
-              <div className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg">
-                System Initializing...
-              </div>
-            </div>
-          </div>
-        } />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
-    </div>
+    </AuthProvider>
   );
 }
 
