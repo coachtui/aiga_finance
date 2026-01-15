@@ -16,7 +16,7 @@ export default function Dashboard() {
           <div className="flex justify-between h-16">
             <div className="flex items-center space-x-8">
               <h1 className="text-xl font-bold text-primary-600">
-                EquipmentAI Finance
+                AIGA LLC Finance
               </h1>
               <Link
                 to="/dashboard"
