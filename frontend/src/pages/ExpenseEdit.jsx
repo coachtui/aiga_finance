@@ -2,6 +2,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useExpense, useUpdateExpense } from '../hooks/useExpenses';
 import ExpenseForm from '../components/expenses/ExpenseForm';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import AttachmentManager from '../components/common/AttachmentManager';
 
 export default function ExpenseEdit() {
   const { id } = useParams();
@@ -39,12 +40,18 @@ export default function ExpenseEdit() {
           <h1 className="text-3xl font-bold text-gray-900">Edit Expense</h1>
         </div>
 
-        <div className="card">
-          <ExpenseForm
-            expense={expense}
-            onSubmit={handleSubmit}
-            isSubmitting={updateExpense.isPending}
-          />
+        <div className="space-y-6">
+          <div className="card">
+            <ExpenseForm
+              expense={expense}
+              onSubmit={handleSubmit}
+              isSubmitting={updateExpense.isPending}
+            />
+          </div>
+
+          <div className="card">
+            <AttachmentManager entityType="expense" entityId={id} />
+          </div>
         </div>
       </div>
     </div>
