@@ -109,7 +109,14 @@ CREATE TABLE subscriptions (
             ELSE billing_amount
         END
     ) STORED,
-    arr_contribution DECIMAL(15, 2) GENERATED ALWAYS AS (mrr_contribution * 12) STORED,
+    arr_contribution DECIMAL(15, 2) GENERATED ALWAYS AS (
+        CASE billing_cycle
+            WHEN 'monthly' THEN billing_amount * 12
+            WHEN 'quarterly' THEN billing_amount * 4
+            WHEN 'annual' THEN billing_amount
+            ELSE billing_amount * 12
+        END
+    ) STORED,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     deleted_at TIMESTAMP,
