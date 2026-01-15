@@ -78,12 +78,16 @@ async function runMigrations() {
 // Test database connection before starting server
 async function startServer() {
   try {
+    logger.info('startServer() called');
+
     // Test database connection
+    logger.info('Testing database connection...');
     const dbConnected = await testConnection();
     if (!dbConnected) {
       logger.error('Failed to connect to database. Exiting...');
       process.exit(1);
     }
+    logger.info('Database connection test passed');
 
     // Run migrations
     await runMigrations();
