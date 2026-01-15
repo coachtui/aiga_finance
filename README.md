@@ -136,7 +136,7 @@ See `/docs/DEPLOYMENT.md` for deployment instructions.
 
 ## License
 
-Proprietary - EquipmentAI Inspector
+Proprietary - AIGA Financial
 
 ## Support
 
