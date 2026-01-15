@@ -1,12 +1,16 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useExpenseStats } from '../hooks/useExpenses';
+import { useMRR, useRevenueDashboard, useRevenueVsExpenses } from '../hooks/useRevenue';
 import ExpenseDashboard from '../components/expenses/ExpenseDashboard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const { data: stats, isLoading } = useExpenseStats('30d');
+  const { data: mrrData } = useMRR();
+  const { data: revenueDashboard } = useRevenueDashboard('30d');
+  const { data: plData } = useRevenueVsExpenses('30d');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -31,10 +35,22 @@ export default function Dashboard() {
                 Expenses
               </Link>
               <Link
-                to="/payment-methods"
+                to="/clients"
                 className="text-gray-600 hover:text-gray-900 font-medium"
               >
-                Payment Methods
+                Clients
+              </Link>
+              <Link
+                to="/invoices"
+                className="text-gray-600 hover:text-gray-900 font-medium"
+              >
+                Invoices
+              </Link>
+              <Link
+                to="/revenue"
+                className="text-gray-600 hover:text-gray-900 font-medium"
+              >
+                Revenue Analytics
               </Link>
             </div>
             <div className="flex items-center space-x-4">
@@ -63,8 +79,9 @@ export default function Dashboard() {
           <LoadingSpinner />
         ) : (
           <>
-            {/* Metrics Cards */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Expense Metrics Cards */}
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Expenses</h3>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
               <div className="card">
                 <h3 className="text-sm font-medium text-gray-500">
                   Total Expenses
@@ -102,23 +119,69 @@ export default function Dashboard() {
               </div>
             </div>
 
+            {/* Revenue Metrics Cards */}
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue</h3>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+              <div className="card">
+                <h3 className="text-sm font-medium text-gray-500">
+                  Monthly Recurring Revenue
+                </h3>
+                <p className="mt-2 text-3xl font-semibold text-green-600">
+                  ${parseFloat(mrrData?.totalMRR || 0).toFixed(2)}
+                </p>
+                <p className="mt-1 text-sm text-gray-600">
+                  Annual: ${(parseFloat(mrrData?.totalMRR || 0) * 12).toFixed(2)}
+                </p>
+              </div>
+
+              <div className="card">
+                <h3 className="text-sm font-medium text-gray-500">
+                  Total Revenue
+                </h3>
+                <p className="mt-2 text-3xl font-semibold text-green-600">
+                  ${parseFloat(revenueDashboard?.totalRevenue || 0).toFixed(2)}
+                </p>
+                <p className="mt-1 text-sm text-gray-600">Last 30 days</p>
+              </div>
+
+              <div className="card">
+                <h3 className="text-sm font-medium text-gray-500">
+                  Outstanding Receivables
+                </h3>
+                <p className="mt-2 text-3xl font-semibold text-orange-600">
+                  ${parseFloat(revenueDashboard?.outstandingBalance || 0).toFixed(2)}
+                </p>
+                <p className="mt-1 text-sm text-gray-600">Amount due</p>
+              </div>
+
+              <div className="card">
+                <h3 className="text-sm font-medium text-gray-500">
+                  Net Income (P&L)
+                </h3>
+                <p className={`mt-2 text-3xl font-semibold ${(stats?.totalAmount || 0) < (revenueDashboard?.totalRevenue || 0) ? 'text-green-600' : 'text-red-600'}`}>
+                  ${(parseFloat(revenueDashboard?.totalRevenue || 0) - parseFloat(stats?.totalAmount || 0)).toFixed(2)}
+                </p>
+                <p className="mt-1 text-sm text-gray-600">Revenue - Expenses</p>
+              </div>
+            </div>
+
             {/* Quick Actions */}
             <div className="mt-8 card">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Quick Actions
               </h3>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
                 <Link to="/expenses/new" className="btn btn-primary text-center">
                   + Add Expense
                 </Link>
-                <Link to="/expenses" className="btn btn-secondary text-center">
-                  View All Expenses
+                <Link to="/invoices/new" className="btn btn-primary text-center">
+                  + Create Invoice
                 </Link>
-                <Link
-                  to="/payment-methods"
-                  className="btn btn-secondary text-center"
-                >
-                  Manage Payment Methods
+                <Link to="/clients" className="btn btn-secondary text-center">
+                  View Clients
+                </Link>
+                <Link to="/revenue" className="btn btn-secondary text-center">
+                  Revenue Analytics
                 </Link>
               </div>
             </div>
