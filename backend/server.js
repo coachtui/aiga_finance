@@ -2,6 +2,7 @@ require('dotenv').config();
 const app = require('./src/app');
 const { testConnection, closePool } = require('./src/config/database');
 const logger = require('./src/utils/logger');
+const { initializeScheduler } = require('./src/cron/scheduler');
 
 const PORT = process.env.PORT || 3000;
 
@@ -20,6 +21,14 @@ async function startServer() {
       logger.info(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
       logger.info(`Health check available at http://localhost:${PORT}/health`);
       logger.info(`API base URL: http://localhost:${PORT}/${process.env.API_VERSION || 'v1'}`);
+
+      // Initialize scheduled tasks (cron jobs)
+      try {
+        initializeScheduler();
+      } catch (error) {
+        logger.error('Failed to initialize scheduler:', error);
+        // Don't exit - scheduler is optional, app can still run
+      }
     });
 
     // Graceful shutdown
