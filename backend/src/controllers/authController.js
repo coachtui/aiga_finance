@@ -106,12 +106,21 @@ class AuthController {
   /**
    * Logout user
    * POST /auth/logout
+   * Blacklists both access and refresh tokens
    */
   static async logout(req, res) {
     try {
       const { refreshToken } = req.body;
 
-      await AuthService.logout(refreshToken);
+      // Extract access token from Authorization header
+      const authHeader = req.headers.authorization;
+      let accessToken = null;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        accessToken = authHeader.substring(7);
+      }
+
+      // Logout and blacklist both tokens
+      await AuthService.logout(accessToken, refreshToken);
 
       res.json({
         success: true,
@@ -130,10 +139,18 @@ class AuthController {
   /**
    * Logout from all devices
    * POST /auth/logout-all
+   * Blacklists current access token and all refresh tokens for user
    */
   static async logoutAll(req, res) {
     try {
-      await AuthService.logoutAll(req.user.id);
+      // Extract current access token from Authorization header
+      const authHeader = req.headers.authorization;
+      let accessToken = null;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        accessToken = authHeader.substring(7);
+      }
+
+      await AuthService.logoutAll(req.user.id, accessToken);
 
       res.json({
         success: true,

@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Session = require('../models/Session');
 const logger = require('../utils/logger');
+const redis = require('../config/redis');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
@@ -120,20 +121,68 @@ class AuthService {
 
   /**
    * Logout user
+   * Invalidates both access and refresh tokens
    */
-  static async logout(refreshToken) {
-    if (refreshToken) {
-      await Session.delete(refreshToken);
-      logger.info('User logged out');
+  static async logout(accessToken, refreshToken) {
+    try {
+      // Delete session from database
+      if (refreshToken) {
+        await Session.delete(refreshToken);
+      }
+
+      // Add tokens to blacklist in Redis
+      // Blacklist persists until token naturally expires
+      if (accessToken) {
+        const decoded = jwt.decode(accessToken);
+        if (decoded && decoded.exp) {
+          const expiresIn = decoded.exp - Math.floor(Date.now() / 1000);
+          if (expiresIn > 0) {
+            await redis.setEx(`blacklist:access:${accessToken}`, expiresIn, '1');
+          }
+        }
+      }
+
+      if (refreshToken) {
+        const decoded = jwt.decode(refreshToken);
+        if (decoded && decoded.exp) {
+          const expiresIn = decoded.exp - Math.floor(Date.now() / 1000);
+          if (expiresIn > 0) {
+            await redis.setEx(`blacklist:refresh:${refreshToken}`, expiresIn, '1');
+          }
+        }
+      }
+
+      logger.info('User logged out and tokens blacklisted');
+    } catch (error) {
+      logger.error('Logout error:', error);
+      throw error;
     }
   }
 
   /**
    * Logout from all devices
+   * Deletes all sessions and blacklists current access token
    */
-  static async logoutAll(userId) {
-    await Session.deleteAllUserSessions(userId);
-    logger.info('User logged out from all devices:', { userId });
+  static async logoutAll(userId, accessToken) {
+    try {
+      await Session.deleteAllUserSessions(userId);
+
+      // Blacklist current access token
+      if (accessToken) {
+        const decoded = jwt.decode(accessToken);
+        if (decoded && decoded.exp) {
+          const expiresIn = decoded.exp - Math.floor(Date.now() / 1000);
+          if (expiresIn > 0) {
+            await redis.setEx(`blacklist:access:${accessToken}`, expiresIn, '1');
+          }
+        }
+      }
+
+      logger.info('User logged out from all devices:', { userId });
+    } catch (error) {
+      logger.error('Logout all error:', error);
+      throw error;
+    }
   }
 
   /**
@@ -144,6 +193,21 @@ class AuthService {
       return jwt.verify(token, JWT_SECRET);
     } catch (error) {
       throw new Error('Invalid or expired token');
+    }
+  }
+
+  /**
+   * Check if token is blacklisted
+   */
+  static async isTokenBlacklisted(token, type = 'access') {
+    try {
+      const key = `blacklist:${type}:${token}`;
+      const result = await redis.get(key);
+      return result !== null;
+    } catch (error) {
+      logger.error('Error checking token blacklist:', error);
+      // On Redis error, assume token is valid to prevent complete auth failure
+      return false;
     }
   }
 

@@ -1,6 +1,7 @@
 const Attachment = require('../models/Attachment');
 const { uploadToS3, getSignedUrl, deleteFromS3, isS3Configured } = require('../config/s3');
 const { query } = require('../config/database');
+const FileType = require('file-type');
 const logger = require('../utils/logger');
 const fs = require('fs').promises;
 const path = require('path');
@@ -42,6 +43,49 @@ class AttachmentController {
 
       // Process each file
       for (const file of req.files) {
+        // SECURITY: Validate file content matches declared MIME type
+        try {
+          const fileType = await FileType.fromBuffer(file.buffer);
+
+          if (!fileType) {
+            return res.status(400).json({
+              error: 'Bad Request',
+              message: `Unable to determine file type for "${file.originalname}". File may be corrupted or in an unsupported format.`,
+            });
+          }
+
+          // Map of allowed MIME types to their actual file signatures
+          const mimeMapping = {
+            'image/jpeg': ['image/jpeg'],
+            'image/jpg': ['image/jpeg'],
+            'image/png': ['image/png'],
+            'image/gif': ['image/gif'],
+            'image/webp': ['image/webp'],
+            'application/pdf': ['application/pdf'],
+            'text/plain': ['text/plain'],
+            'text/csv': ['text/plain', 'text/csv'],
+          };
+
+          // Get allowed actual types for declared MIME type
+          const allowedTypes = mimeMapping[file.mimetype];
+
+          if (!allowedTypes || !allowedTypes.includes(fileType.mime)) {
+            logger.warn(
+              `File type mismatch for "${file.originalname}": declared=${file.mimetype}, actual=${fileType.mime}`
+            );
+            return res.status(400).json({
+              error: 'Bad Request',
+              message: `File content type (${fileType.mime}) doesn't match declared type (${file.mimetype}). This file may be corrupted or malicious.`,
+            });
+          }
+        } catch (validationError) {
+          logger.error(`File validation error for "${file.originalname}":`, validationError);
+          return res.status(400).json({
+            error: 'Bad Request',
+            message: `Failed to validate file: ${validationError.message}`,
+          });
+        }
+
         let filePath;
         let storageProvider;
 

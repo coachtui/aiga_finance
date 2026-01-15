@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const logger = require('../utils/logger');
+const AuthService = require('../services/authService');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -21,6 +22,15 @@ async function authenticate(req, res, next) {
     }
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+
+    // Check if token is blacklisted (logged out)
+    const isBlacklisted = await AuthService.isTokenBlacklisted(token, 'access');
+    if (isBlacklisted) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Token has been revoked',
+      });
+    }
 
     // Verify token
     let decoded;
@@ -88,6 +98,14 @@ async function optionalAuth(req, res, next) {
     }
 
     const token = authHeader.substring(7);
+
+    // Check if token is blacklisted
+    const isBlacklisted = await AuthService.isTokenBlacklisted(token, 'access');
+    if (isBlacklisted) {
+      // Silently fail for optional auth
+      return next();
+    }
+
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = await User.findById(decoded.userId);
 
