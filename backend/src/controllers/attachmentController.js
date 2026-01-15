@@ -1,5 +1,6 @@
 const Attachment = require('../models/Attachment');
 const { uploadToS3, getSignedUrl, deleteFromS3, isS3Configured } = require('../config/s3');
+const { query } = require('../config/database');
 const logger = require('../utils/logger');
 const fs = require('fs').promises;
 const path = require('path');
@@ -96,11 +97,44 @@ class AttachmentController {
   /**
    * Get attachments for an entity
    * GET /attachments/:entityType/:entityId
+   * SECURITY: Verifies user owns the entity before returning attachments
    */
   static async getByEntity(req, res) {
     try {
       const { entityType, entityId } = req.params;
+      const userId = req.user.id;
 
+      // SECURITY: Validate entity type
+      const supportedEntityTypes = ['expense', 'invoice', 'contract', 'client'];
+      if (!supportedEntityTypes.includes(entityType)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid entity type',
+        });
+      }
+
+      // SECURITY: Verify user owns the entity before allowing access to attachments
+      let ownsEntity = false;
+
+      try {
+        // Check ownership based on entity type
+        const checkQuery = `SELECT id FROM ${entityType}s WHERE id = $1 AND user_id = $2`;
+        const result = await query(checkQuery, [entityId, userId]);
+        ownsEntity = result.rows.length > 0;
+      } catch (err) {
+        logger.error(`Error checking ${entityType} ownership:`, err);
+        // If query fails, deny access for security
+        ownsEntity = false;
+      }
+
+      if (!ownsEntity) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: You do not own this entity',
+        });
+      }
+
+      // Safe to retrieve attachments after ownership verified
       const attachments = await Attachment.findByEntity(entityType, entityId);
 
       // Generate signed URLs for S3 files

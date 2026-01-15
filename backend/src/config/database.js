@@ -1,14 +1,35 @@
 const { Pool } = require('pg');
 const logger = require('../utils/logger');
 
-// Database connection pool configuration
-const pool = new Pool({
+// Database connection pool configuration with SSL/TLS support
+const poolConfig = {
   connectionString: process.env.DATABASE_URL,
   min: parseInt(process.env.DATABASE_POOL_MIN, 10) || 2,
   max: parseInt(process.env.DATABASE_POOL_MAX, 10) || 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
-});
+};
+
+// SECURITY: Enable SSL/TLS in production environments
+if (process.env.NODE_ENV === 'production') {
+  poolConfig.ssl = {
+    rejectUnauthorized: true,
+    // Railway and most cloud providers automatically provide CA certificates
+    // If needed, can be set via DATABASE_CA_CERT environment variable
+    ...(process.env.DATABASE_CA_CERT && {
+      ca: process.env.DATABASE_CA_CERT,
+    }),
+  };
+  logger.info('Database SSL/TLS enabled for production');
+} else if (process.env.DATABASE_REQUIRE_SSL === 'true') {
+  // Allow SSL requirement in non-production if explicitly enabled
+  poolConfig.ssl = {
+    rejectUnauthorized: process.env.NODE_ENV === 'production',
+  };
+  logger.info('Database SSL/TLS enabled');
+}
+
+const pool = new Pool(poolConfig);
 
 // Event listeners for pool
 pool.on('connect', () => {
