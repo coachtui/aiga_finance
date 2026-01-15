@@ -1,10 +1,24 @@
+console.log('=== SERVER STARTUP TRACE ===');
+console.log('1. Starting require chain...');
+
 require('dotenv').config();
+console.log('2. dotenv configured');
+
 const fs = require('fs').promises;
 const path = require('path');
+console.log('3. fs and path loaded');
+
 const app = require('./src/app');
+console.log('4. app loaded');
+
 const { query, testConnection, closePool } = require('./src/config/database');
+console.log('5. database module loaded');
+
 const logger = require('./src/utils/logger');
+console.log('6. logger loaded');
+
 const { initializeScheduler } = require('./src/cron/scheduler');
+console.log('7. scheduler loaded');
 
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
@@ -150,4 +164,6 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Start the server
+console.log('8. About to call startServer()');
 startServer();
+console.log('9. startServer() returned (should not reach here)');
