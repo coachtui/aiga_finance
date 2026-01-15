@@ -7,7 +7,7 @@ const poolConfig = {
   min: parseInt(process.env.DATABASE_POOL_MIN, 10) || 2,
   max: parseInt(process.env.DATABASE_POOL_MAX, 10) || 10,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 10000, // Increased from 2s to 10s for Railway cold starts
 };
 
 // SECURITY: Enable SSL/TLS in production environments
@@ -40,11 +40,20 @@ pool.on('error', (err) => {
 // Test database connection
 async function testConnection() {
   try {
-    const client = await pool.connect();
-    const result = await client.query('SELECT NOW()');
-    logger.info('Database connection successful:', result.rows[0].now);
-    client.release();
-    return true;
+    // Add a timeout for the connection test
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Database connection test timeout after 15s')), 15000)
+    );
+
+    const connectPromise = (async () => {
+      const client = await pool.connect();
+      const result = await client.query('SELECT NOW()');
+      logger.info('Database connection successful:', result.rows[0].now);
+      client.release();
+      return true;
+    })();
+
+    return await Promise.race([connectPromise, timeoutPromise]);
   } catch (error) {
     logger.error('Database connection failed:', error);
     return false;
