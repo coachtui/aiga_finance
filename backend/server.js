@@ -23,6 +23,20 @@ console.log('7. scheduler loaded');
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
 
+// Debug: Log environment
+console.log('PORT:', PORT);
+console.log('HOST:', HOST);
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
+if (process.env.DATABASE_URL) {
+  const dbUrl = process.env.DATABASE_URL;
+  // Mask password for safety
+  const masked = dbUrl.replace(/:[^:/@]+@/, ':****@');
+  console.log('DATABASE_URL (masked):', masked);
+} else {
+  console.error('DATABASE_URL is NOT SET!');
+}
+
 // Auto-run migrations on startup
 async function runMigrations() {
   try {
