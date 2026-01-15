@@ -7,6 +7,7 @@ const logger = require('./src/utils/logger');
 const { initializeScheduler } = require('./src/cron/scheduler');
 
 const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0';
 
 // Auto-run migrations on startup
 async function runMigrations() {
@@ -88,8 +89,8 @@ async function startServer() {
     await runMigrations();
 
     // Start server
-    const server = app.listen(PORT, () => {
-      logger.info(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    const server = app.listen(PORT, HOST, () => {
+      logger.info(`Server running in ${process.env.NODE_ENV} mode on ${HOST}:${PORT}`);
       logger.info(`Health check available at http://localhost:${PORT}/health`);
       logger.info(`API base URL: http://localhost:${PORT}/${process.env.API_VERSION || 'v1'}`);
 
