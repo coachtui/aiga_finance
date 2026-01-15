@@ -13,18 +13,14 @@ const poolConfig = {
 // SECURITY: Enable SSL/TLS in production environments
 if (process.env.NODE_ENV === 'production') {
   poolConfig.ssl = {
-    rejectUnauthorized: true,
-    // Railway and most cloud providers automatically provide CA certificates
-    // If needed, can be set via DATABASE_CA_CERT environment variable
-    ...(process.env.DATABASE_CA_CERT && {
-      ca: process.env.DATABASE_CA_CERT,
-    }),
+    rejectUnauthorized: false,
+    // Railway automatically handles SSL - just need to enable it
   };
   logger.info('Database SSL/TLS enabled for production');
 } else if (process.env.DATABASE_REQUIRE_SSL === 'true') {
   // Allow SSL requirement in non-production if explicitly enabled
   poolConfig.ssl = {
-    rejectUnauthorized: process.env.NODE_ENV === 'production',
+    rejectUnauthorized: false,
   };
   logger.info('Database SSL/TLS enabled');
 }
