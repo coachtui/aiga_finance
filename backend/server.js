@@ -165,5 +165,8 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Start the server
 console.log('8. About to call startServer()');
-startServer();
-console.log('9. startServer() returned (should not reach here)');
+startServer().catch((error) => {
+  console.error('Fatal error in startServer:', error);
+  process.exit(1);
+});
+console.log('9. startServer() is running asynchronously');
