@@ -1,0 +1,12 @@
+[build]
+builder = "NIXPACKS"
+
+[[services]]
+name = "backend"
+rootDirectory = "backend"
+startCommand = "npm start"
+
+[[services]]
+name = "frontend"
+rootDirectory = "frontend"
+startCommand = "npm run build && npm run preview"
