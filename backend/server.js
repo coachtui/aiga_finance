@@ -1,41 +1,14 @@
-console.log('=== SERVER STARTUP TRACE ===');
-console.log('1. Starting require chain...');
-
 require('dotenv').config();
-console.log('2. dotenv configured');
 
 const fs = require('fs').promises;
 const path = require('path');
-console.log('3. fs and path loaded');
-
 const app = require('./src/app');
-console.log('4. app loaded');
-
 const { query, testConnection, closePool } = require('./src/config/database');
-console.log('5. database module loaded');
-
 const logger = require('./src/utils/logger');
-console.log('6. logger loaded');
-
 const { initializeScheduler } = require('./src/cron/scheduler');
-console.log('7. scheduler loaded');
 
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
-
-// Debug: Log environment
-console.log('PORT:', PORT);
-console.log('HOST:', HOST);
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
-if (process.env.DATABASE_URL) {
-  const dbUrl = process.env.DATABASE_URL;
-  // Mask password for safety
-  const masked = dbUrl.replace(/:[^:/@]+@/, ':****@');
-  console.log('DATABASE_URL (masked):', masked);
-} else {
-  console.error('DATABASE_URL is NOT SET!');
-}
 
 // Auto-run migrations on startup
 async function runMigrations() {
@@ -106,7 +79,7 @@ async function runMigrations() {
 // Test database connection before starting server
 async function startServer() {
   try {
-    logger.info('startServer() called');
+    logger.info('Starting server...');
 
     // Test database connection
     logger.info('Testing database connection...');
@@ -178,9 +151,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Start the server
-console.log('8. About to call startServer()');
 startServer().catch((error) => {
-  console.error('Fatal error in startServer:', error);
+  logger.error('Fatal error in startServer:', error);
   process.exit(1);
 });
-console.log('9. startServer() is running asynchronously');
