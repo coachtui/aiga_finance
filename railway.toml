@@ -9,4 +9,4 @@ startCommand = "npm start"
 [[services]]
 name = "frontend"
 rootDirectory = "frontend"
-startCommand = "npm run build && npm run preview"
+startCommand = "npm run build && npm start"
