@@ -16,7 +16,9 @@ const api = axios.create({
 // Initialize CSRF token from backend
 export async function initCSRF() {
   try {
-    const response = await axios.get(`${API_URL}/csrf-token`);
+    // CSRF token endpoint is at root level, not under /v1
+    const baseURL = API_URL.replace('/v1', '');
+    const response = await axios.get(`${baseURL}/csrf-token`);
     csrfToken = response.data.csrfToken;
     console.log('CSRF token initialized');
   } catch (error) {
@@ -71,6 +73,10 @@ api.interceptors.response.use(
         // Try to refresh token
         const response = await axios.post(`${API_URL}/auth/refresh`, {
           refreshToken,
+        }, {
+          headers: {
+            'X-CSRF-Token': csrfToken || '',
+          },
         });
 
         const { accessToken } = response.data.data;
