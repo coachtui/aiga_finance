@@ -24,7 +24,17 @@ export default function ExpenseForm({ expense, onSubmit, isSubmitting }) {
   });
 
   const { data: categories } = useCategories('expense');
-  const { data: paymentMethods } = usePaymentMethods();
+  const { data: paymentMethods, isLoading: loadingPaymentMethods, error: paymentMethodsError } = usePaymentMethods();
+
+  // Debug payment methods
+  useEffect(() => {
+    console.log('Payment Methods Debug:', {
+      paymentMethods,
+      isLoading: loadingPaymentMethods,
+      error: paymentMethodsError,
+      count: paymentMethods?.length
+    });
+  }, [paymentMethods, loadingPaymentMethods, paymentMethodsError]);
 
   // Reset form with expense data when it loads
   useEffect(() => {
@@ -128,12 +138,24 @@ export default function ExpenseForm({ expense, onSubmit, isSubmitting }) {
         </label>
         <select className="input" {...register('paymentMethodId')}>
           <option value="">Select payment method...</option>
+          {loadingPaymentMethods && <option disabled>Loading...</option>}
+          {paymentMethodsError && <option disabled>Error loading payment methods</option>}
           {paymentMethods?.map((pm) => (
             <option key={pm.id} value={pm.id}>
               {pm.name} ({pm.type.replace('_', ' ')})
             </option>
           ))}
         </select>
+        {paymentMethodsError && (
+          <p className="text-red-600 text-sm mt-1">
+            Failed to load payment methods. Check console for details.
+          </p>
+        )}
+        {!loadingPaymentMethods && !paymentMethodsError && paymentMethods?.length === 0 && (
+          <p className="text-yellow-600 text-sm mt-1">
+            No payment methods available. Please add one in settings.
+          </p>
+        )}
       </div>
 
       {/* Description */}
