@@ -12,7 +12,8 @@
     "lint:fix": "eslint src/**/*.js --fix",
     "migrate": "node src/migrations/run.js",
     "migrate:rollback": "node src/migrations/rollback.js",
-    "seed": "node src/seeds/run.js"
+    "seed": "node src/seeds/run.js",
+    "seed:payment-methods": "node src/scripts/seed-payment-methods.js"
   },
   "keywords": [
     "finance",
