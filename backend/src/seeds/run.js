@@ -8,7 +8,10 @@ async function runSeeds() {
   try {
     logger.info('Starting database seeding...');
 
+    // Seed categories first
     await seedCategories();
+
+    // Then seed payment methods for all users
     await seedPaymentMethods();
 
     logger.info('Database seeding completed successfully');
@@ -21,4 +24,9 @@ async function runSeeds() {
   }
 }
 
-runSeeds();
+// Run if called directly
+if (require.main === module) {
+  runSeeds();
+}
+
+module.exports = { runSeeds };
