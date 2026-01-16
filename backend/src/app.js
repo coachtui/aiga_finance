@@ -10,6 +10,10 @@ const logger = require('./utils/logger');
 // Initialize express app
 const app = express();
 
+// Trust proxy headers (Railway uses reverse proxy with X-Forwarded-For)
+// This allows rate limiting and IP detection to work correctly
+app.set('trust proxy', 1);
+
 // Security middleware - Content Security Policy
 app.use(
   helmet({
