@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import ExpenseCreate from './pages/ExpenseCreate';
+import ExpenseImport from './pages/ExpenseImport';
 import ExpenseEdit from './pages/ExpenseEdit';
 import Clients from './pages/Clients';
 import ClientCreate from './pages/ClientCreate';
@@ -50,6 +51,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ExpenseCreate />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/expenses/import"
+          element={
+            <ProtectedRoute>
+              <ExpenseImport />
             </ProtectedRoute>
           }
         />

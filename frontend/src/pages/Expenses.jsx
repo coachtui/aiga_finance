@@ -53,9 +53,14 @@ export default function Expenses() {
             </p>
           </div>
 
-          <Link to="/expenses/new" className="btn btn-primary">
-            + Add Expense
-          </Link>
+          <div className="flex space-x-3">
+            <Link to="/expenses/import" className="btn btn-secondary">
+              Import Invoices
+            </Link>
+            <Link to="/expenses/new" className="btn btn-primary">
+              + Add Expense
+            </Link>
+          </div>
         </div>
 
         <ExpenseList />

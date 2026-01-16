@@ -1,51 +1,67 @@
 const redis = require('redis');
+const logger = require('../utils/logger');
 
-// Create Redis client
-const client = redis.createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379',
-  socket: {
-    reconnectStrategy: (retries) => {
-      const delay = Math.min(retries * 50, 500);
-      return delay;
-    },
-  },
-});
-
+let client = null;
 let isConnected = false;
 
-// Error handling
-client.on('error', (err) => {
-  console.error('Redis connection error:', err.message);
-});
+// Only create Redis client if explicitly enabled via environment variable
+const redisEnabled = process.env.REDIS_ENABLED === 'true' && process.env.REDIS_URL;
 
-client.on('connect', () => {
-  console.log('Redis connected');
-});
+if (redisEnabled) {
+  // Create Redis client
+  client = redis.createClient({
+    url: process.env.REDIS_URL,
+    socket: {
+      reconnectStrategy: (retries) => {
+        if (retries > 3) {
+          logger.warn('Redis reconnection failed after 3 attempts, using in-memory fallback');
+          return false; // Stop reconnecting
+        }
+        const delay = Math.min(retries * 50, 500);
+        return delay;
+      },
+    },
+  });
 
-client.on('ready', () => {
-  console.log('Redis ready');
-  isConnected = true;
-});
+  // Error handling - only log once
+  let errorLogged = false;
+  client.on('error', (err) => {
+    if (!errorLogged) {
+      logger.warn('Redis connection error, falling back to in-memory storage:', err.message);
+      errorLogged = true;
+    }
+  });
 
-client.on('end', () => {
-  console.log('Redis connection closed');
-  isConnected = false;
-});
+  client.on('connect', () => {
+    logger.info('Redis connected');
+  });
 
-// Connect to Redis (async) - but don't exit if it fails
-async function connectRedis() {
-  try {
-    await client.connect();
+  client.on('ready', () => {
+    logger.info('Redis ready');
     isConnected = true;
-  } catch (err) {
-    console.error('Failed to connect to Redis:', err.message);
-    console.warn('Redis is unavailable - app will continue but token blacklist will not work');
-    // Don't exit - app can still run without Redis
-  }
-}
+  });
 
-// Initialize connection
-connectRedis();
+  client.on('end', () => {
+    logger.info('Redis connection closed');
+    isConnected = false;
+  });
+
+  // Connect to Redis (async) - but don't exit if it fails
+  async function connectRedis() {
+    try {
+      await client.connect();
+      isConnected = true;
+    } catch (err) {
+      logger.warn('Redis unavailable - using in-memory session storage');
+      client = null; // Set to null so sessionStore uses fallback
+    }
+  }
+
+  // Initialize connection
+  connectRedis();
+} else {
+  logger.info('Redis disabled - using in-memory session storage for development');
+}
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
