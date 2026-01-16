@@ -39,7 +39,7 @@ Important instructions:
 Extract the data now:`;
 
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-5-sonnet-20240620',
       max_tokens: 1024,
       messages: [
         {
@@ -185,7 +185,7 @@ ${textContent}
 Extract the data now:`;
 
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-5-sonnet-20240620',
       max_tokens: 1024,
       messages: [
         {
