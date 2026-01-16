@@ -8,6 +8,7 @@ let csrfToken = null;
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,
+  withCredentials: true, // Allow cookies to be sent/received for CSRF protection
   headers: {
     'Content-Type': 'application/json',
   },
@@ -18,7 +19,9 @@ export async function initCSRF() {
   try {
     // CSRF token endpoint is at root level, not under /v1
     const baseURL = API_URL.replace('/v1', '');
-    const response = await axios.get(`${baseURL}/csrf-token`);
+    const response = await axios.get(`${baseURL}/csrf-token`, {
+      withCredentials: true, // Allow cookies for CSRF protection
+    });
     csrfToken = response.data.csrfToken;
     console.log('CSRF token initialized');
   } catch (error) {
@@ -74,6 +77,7 @@ api.interceptors.response.use(
         const response = await axios.post(`${API_URL}/auth/refresh`, {
           refreshToken,
         }, {
+          withCredentials: true,
           headers: {
             'X-CSRF-Token': csrfToken || '',
           },
