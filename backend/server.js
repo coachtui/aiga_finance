@@ -133,6 +133,9 @@ async function startServer() {
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
   } catch (error) {
+    console.error('=== FATAL ERROR ===');
+    console.error('Message:', error.message);
+    console.error('Stack:', error.stack);
     logger.error('Failed to start server:', error);
     process.exit(1);
   }
