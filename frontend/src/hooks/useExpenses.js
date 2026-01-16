@@ -15,7 +15,23 @@ export function useExpense(id) {
   return useQuery({
     queryKey: ['expenses', id],
     queryFn: () => expenseApi.getExpense(id),
-    select: (response) => response.data.data.expense,
+    select: (response) => {
+      const expense = response.data.data.expense;
+      // Convert snake_case to camelCase for form compatibility
+      return {
+        ...expense,
+        transactionDate: expense.transaction_date,
+        vendorName: expense.vendor_name,
+        categoryId: expense.category_id,
+        paymentMethodId: expense.payment_method_id,
+        isRecurring: expense.is_recurring,
+        isReimbursable: expense.is_reimbursable,
+        isBillable: expense.is_billable,
+        isTaxDeductible: expense.tax_deductible,
+        exchangeRate: expense.exchange_rate,
+        recurrenceRule: expense.recurrence_rule,
+      };
+    },
     enabled: !!id,
   });
 }
