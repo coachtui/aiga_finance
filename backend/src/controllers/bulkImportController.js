@@ -160,8 +160,7 @@ exports.confirmImport = async (req, res) => {
         const fileData = sessionData.files.find(f => f.originalname === originalExpense?.fileName);
 
         // Create expense using existing expense service
-        const newExpense = await expenseService.create({
-          userId,
+        const newExpense = await expenseService.createExpense(userId, {
           amount: expenseData.amount,
           transactionDate: expenseData.transactionDate,
           vendorName: expenseData.vendorName,
@@ -175,7 +174,7 @@ exports.confirmImport = async (req, res) => {
           isReimbursable: expenseData.isReimbursable || false,
           isBillable: expenseData.isBillable || false,
           isTaxDeductible: expenseData.isTaxDeductible !== undefined ? expenseData.isTaxDeductible : true
-        }, client);
+        });
 
         // Attach file to expense if available
         if (fileData && originalExpense) {
