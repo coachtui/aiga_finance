@@ -23,6 +23,7 @@ import Invoices from './pages/Invoices';
 import InvoiceCreate from './pages/InvoiceCreate';
 import InvoiceDetail from './pages/InvoiceDetail';
 import RevenueAnalytics from './pages/RevenueAnalytics';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -176,6 +177,15 @@ function App() {
           element={
             <ProtectedRoute>
               <RevenueAnalytics />
+            </ProtectedRoute>
+          }
+        />
+        {/* Settings Routes */}
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />
