@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form';
+import { useEffect } from 'react';
 import { useCategories } from '../../hooks/useCategories';
 import { usePaymentMethods } from '../../hooks/usePaymentMethods';
 import { format } from 'date-fns';
@@ -7,9 +8,10 @@ export default function ExpenseForm({ expense, onSubmit, isSubmitting }) {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm({
-    defaultValues: expense || {
+    defaultValues: {
       transactionDate: format(new Date(), 'yyyy-MM-dd'),
       currency: 'USD',
       exchangeRate: 1.0,
@@ -23,6 +25,16 @@ export default function ExpenseForm({ expense, onSubmit, isSubmitting }) {
 
   const { data: categories } = useCategories('expense');
   const { data: paymentMethods } = usePaymentMethods();
+
+  // Reset form with expense data when it loads
+  useEffect(() => {
+    if (expense) {
+      reset({
+        ...expense,
+        tags: expense.tags?.join(', ') || '',
+      });
+    }
+  }, [expense, reset]);
 
   const handleFormSubmit = (data) => {
     // Process tags: convert comma-separated string to array
@@ -146,7 +158,6 @@ export default function ExpenseForm({ expense, onSubmit, isSubmitting }) {
           type="text"
           className="input"
           placeholder="Comma-separated: infrastructure, urgent, client-work"
-          defaultValue={expense?.tags?.join(', ') || ''}
           {...register('tags')}
         />
         <p className="text-sm text-gray-500 mt-1">
